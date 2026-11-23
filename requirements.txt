@@ -1,3 +1,4 @@
 networkx>=3.3
 pandas>=2.2
 numpy>=1.26
+pynacl>=1.5

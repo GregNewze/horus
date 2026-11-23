@@ -26,7 +26,19 @@ Além do gerador próprio, o motor foi testado em mundos do **PixSim**, simulado
 
 O PixSim é usado como dependência externa, sem cópia de código para este repositório (`validacao/pixsim_adaptar.py` só converte a saída). Ele simula uma instituição; a divisão das contas entre seis instituições é hipótese nossa.
 
-Resultado em 3 sementes (20 mil contas, 30 dias): o consórcio achou de 50% a 56% dos laranjas, contra 40% a 48% das instituições sozinhas. A precisão caiu de 98–100% para 83–90%, porque contas de saída (lojas e corretoras que recebem de muitos laranjas) viraram alarme falso. O dinheiro protegido ficou praticamente igual. Também testamos na base IBM AMLworld (lavagem corporativa lenta), onde as regras de repasse em 1 hora não acham nada.
+Resultados (o mesmo motor, sem ajuste por base):
+
+| Base | Laranjas achados, sozinha → consórcio | Precisão do consórcio | Dinheiro em conta já marcada |
+|---|---|---|---|
+| Gerador do Hórus (5 sementes) | 52–79% → 69–83% | 100% | 32–45% → 40–49% |
+| PixSim (3 sementes, 20 mil contas) | 38–44% → 48–55% | 99–100% | 31–44% → 32–44% |
+| IBM AMLworld (lavagem lenta) | 0% → 0% | — | — |
+
+Em nenhuma base um laranja é marcado antes do primeiro golpe que recebe. No PixSim os laranjas extras do consórcio ficam evidentes depois de usados, então o dinheiro protegido não sobe.
+
+## Privacidade
+
+O identificador da conta vira token por OPRF sobre Ed25519 (`motor/oprf.py`): o membro cega a entrada, o hub aplica a chave k sem ver a conta, o membro tira a cegueira. O hub não tem a chave m dos membros e não testa contas; um membro não calcula token sem o hub, e o hub registra quantos tokens cada membro pede (ataque de dicionário aparece no registro). Hub e membro juntos ainda conseguem testar contas.
 
 ## Rodar
 

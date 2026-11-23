@@ -164,3 +164,48 @@ def test_muninn_respeita_janela_de_24h_e_5_camadas():
 def test_formato_brl():
     from motor.muninn import brl
     assert brl(8538.09) == "R$ 8.538,09" and brl(200) == "R$ 200,00"
+
+
+def test_rede_sozinha_nao_marca_conta_sem_sinal_proprio():
+    """Uma loja que recebe de 3 suspeitas de 3 instituições não pode virar marcada só pela rede."""
+    from motor.consorcio import analisar
+    from motor.sinais import FORTE, FRACA
+    notas = {"a": 40, "b": 40, "c": 40}
+    arestas = [("a", "loja", "repasse", 500), ("b", "loja", "repasse", 500), ("c", "loja", "repasse", 500)]
+    dono = {"a": "I1", "b": "I2", "c": "I3", "loja": "I4"}
+    relatores = {"loja": {"I1", "I2", "I3"}}
+    final, porque, aneis, _ = analisar(notas, {}, dono, arestas, relatores)
+    assert final["loja"] < FORTE
+    assert final["loja"] >= FRACA  # continua visível como suspeita para revisão
+
+
+def test_conta_sem_sinal_proprio_nao_junta_aneis():
+    """Dois anéis que mandam dinheiro para a mesma corretora continuam sendo dois anéis."""
+    from motor.consorcio import analisar
+    notas = {x: 40 for x in ("a1", "a2", "a3", "b1", "b2", "b3")}
+    arestas = [("a1", "a2", "repasse", 1), ("a2", "a3", "repasse", 1), ("a3", "a1", "repasse", 1),
+               ("b1", "b2", "repasse", 1), ("b2", "b3", "repasse", 1), ("b3", "b1", "repasse", 1),
+               ("a3", "cripto", "repasse", 1), ("b3", "cripto", "repasse", 1)]
+    _, _, aneis, _ = analisar(notas, {}, {}, arestas, {})
+    assert sorted(len(a) for a in aneis) == [3, 3]
+
+
+def test_oprf_tokens_batem_entre_membros_e_hub_nao_ve_a_conta():
+    from motor.oprf import Hub, Membro, token_direto
+    hub = Hub()
+    a, b = Membro("A", b"m"), Membro("B", b"m")
+    cegos, rs = a.cegar(["C00001"])
+    assert b"C00001" not in cegos[0]
+    avaliados = hub.avaliar("A", cegos)
+    t_a = Membro.descegar(avaliados, rs)[0]
+    assert t_a == b.tokenizar(["C00001"], hub)[0] == token_direto("C00001", b"m", hub._k)
+    assert Membro("C", b"outra").tokenizar(["C00001"], hub)[0] != t_a  # sem a chave m não reproduz
+    assert a.cegar(["C00001"])[0] != a.cegar(["C00001"])[0]  # o mesmo pedido sai diferente a cada vez
+
+
+def test_oprf_registro_denuncia_ataque_de_dicionario():
+    from motor.oprf import Hub, Membro
+    hub = Hub()
+    Membro("honesto", b"m").tokenizar([f"C{i}" for i in range(50)], hub)
+    Membro("curioso", b"m").tokenizar([f"CPF{i}" for i in range(500)], hub)
+    assert hub.suspeitos_de_dicionario({"honesto": 100, "curioso": 100}) == ["curioso"]

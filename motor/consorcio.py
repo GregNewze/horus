@@ -13,14 +13,40 @@ from collections import defaultdict
 
 import networkx as nx
 import pandas as pd
+from nacl import bindings as nb
 
+from .oprf import Hub, Membro, token_direto
 from .sinais import FORTE, FRACA, arestas_suspeitas
 
-SEGREDO = b"horus-consorcio-demo"  # na vida real: chave do consórcio guardada em HSM, trocada por rodada
+SEGREDO = b"horus-consorcio-demo"  # chave m dos membros; na vida real fica em HSM e troca a cada rodada
+
+# Hub da demo com k fixo, para a simulação ser reproduzível. Na vida real k é sorteado a cada rodada.
+_HUB = Hub(k=nb.crypto_core_ed25519_scalar_reduce(hashlib.sha512(b"horus-hub-demo-rodada-1").digest()))
+_MEMBROS: dict[str, Membro] = {}
+_TABELA: dict[str, str] = {}  # conta -> token; cada membro guarda a dele, aqui é uma só por ser simulação
 
 
 def token(valor, segredo=SEGREDO):
+    """HMAC dos membros. Usado só no id fim a fim do Pix, para o hub não contar o mesmo Pix duas vezes."""
     return hmac.new(segredo, str(valor).encode(), hashlib.sha256).hexdigest()[:16]
+
+
+def tokens_contas(contas, membro="demo"):
+    """Token OPRF de cada conta (motor/oprf.py). Pede ao hub só as que o membro ainda não tem na tabela."""
+    faltam = [c for c in dict.fromkeys(contas) if c not in _TABELA]
+    if faltam:
+        m = _MEMBROS.setdefault(membro, Membro(membro, SEGREDO))
+        _TABELA.update(zip(faltam, m.tokenizar(faltam, _HUB)))
+    return [_TABELA[c] for c in contas]
+
+
+def token_conta(conta, membro="demo"):
+    return tokens_contas([conta], membro)[0]
+
+
+def pedidos_ao_hub():
+    """Quantos tokens cada membro pediu ao hub: é o registro que denuncia ataque de dicionário."""
+    return dict(_HUB.pedidos)
 
 
 def analisar(notas, motivos, dono, arestas, relatores):
@@ -52,8 +78,10 @@ def analisar(notas, motivos, dono, arestas, relatores):
             m.append(f"{len(outras)} outras instituições relataram Pix suspeitos com esta conta")
         porque[n] = m
 
-    # Anéis: componentes ligados só por contas que já passaram da nota fraca
-    sub = g.subgraph([n for n, v in final.items() if v >= FRACA])
+    # Anéis: só entre contas com evidência própria (alguma instituição já deu nota fraca ou forte).
+    # Conta sem evidência própria, como loja ou corretora que recebe de vários laranjas, não liga anéis:
+    # antes ela colava redes diferentes num "anel" de centenas de contas.
+    sub = g.subgraph([n for n, v in final.items() if v >= FRACA and notas.get(n, 0) >= FRACA])
     aneis = [sorted(c) for c in nx.connected_components(sub) if len(c) >= 3]
     anel_de = {}
     for i, c in enumerate(aneis):
@@ -62,6 +90,11 @@ def analisar(notas, motivos, dono, arestas, relatores):
             if len(c) >= 4:
                 final[n] += 10
                 porque[n].append(f"faz parte de um anel com {len(c)} contas")
+    # A rede reforça, não acusa sozinha: sem evidência própria a conta para em suspeita, nunca marcada.
+    for n in final:
+        if notas.get(n, 0) < FRACA and final[n] >= FORTE:
+            final[n] = FORTE - 1
+            porque[n].append("sem sinal próprio: fica como suspeita para revisão, não é marcada")
     return final, porque, aneis, anel_de
 
 
@@ -88,10 +121,11 @@ def modo_consorcio(membros, suspeitas, txs, ate):
     for banco in membros:
         minhas = suspeitas[suspeitas["banco"] == banco]
         ar = arestas_suspeitas(txs, ate, set(minhas.index))
+        tok = dict(zip(*(lambda ids: (ids, tokens_contas(ids, banco)))(list(minhas.index) + list(ar["origem"]) + list(ar["destino"]))))
         pacotes.append({
             "instituicao": banco,
-            "contas": [{"t": token(i), "nota": int(r.nota), "motivos": r.motivos} for i, r in minhas.iterrows()],
-            "pix": [{"e2e": token(r.id), "o": token(r.origem), "d": token(r.destino),
+            "contas": [{"t": tok[i], "nota": int(r.nota), "motivos": r.motivos} for i, r in minhas.iterrows()],
+            "pix": [{"e2e": token(r.id), "o": tok[r.origem], "d": tok[r.destino],
                      "inst_o": r.banco_origem, "inst_d": r.banco_destino,
                      "tipo": "repasse" if r.repasse else "teste", "valor": round(r.valor, -1)}
                     for r in ar.itertuples()],
@@ -118,4 +152,4 @@ def modo_consorcio(membros, suspeitas, txs, ate):
 
 def destokenizar(ids):
     """Cada instituição só consegue reverter tokens das próprias contas (ou contrapartes que já conhece)."""
-    return {token(i): i for i in ids}
+    return {token_direto(i, SEGREDO, _HUB._k): i for i in ids}

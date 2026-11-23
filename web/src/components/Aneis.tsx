@@ -27,7 +27,7 @@ export default function Aneis({ demo, t }: { demo: Demo; t: number }) {
               {a.achado_s && <i className={`pt pt-s ${vS ? "on" : ""}`} style={{ left: x(a.achado_s) }} title={`Sozinha: ${dataHora(a.achado_s)}`} />}
               {a.achado_c && <i className={`pt pt-c ${vC ? "on" : ""}`} style={{ left: x(a.achado_c) }} title={`Consórcio: ${dataHora(a.achado_c)}`} />}
             </div>
-            <span className="anel-ganho" role="cell">{ganho !== null ? `${ganho > 0 ? "+" : ""}${ganho} h` : "—"}</span>
+            <span className="anel-ganho" role="cell">{ganho === null ? "—" : ganho === 0 ? "empate" : `${ganho > 0 ? "+" : ""}${ganho} h`}</span>
           </div>
         );
       })}

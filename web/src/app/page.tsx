@@ -6,7 +6,7 @@ import Grafo from "@/components/Grafo";
 import PainelConta from "@/components/PainelConta";
 import LaudoMuninn from "@/components/LaudoMuninn";
 import Aneis from "@/components/Aneis";
-import { BANCOS, Demo, LARANJA, dataHora, horas, mediana, ms, pct } from "@/lib/dados";
+import { BANCOS, BaseValidacao, Demo, LARANJA, dataHora, faixaPct, horas, mediana, ms, pct } from "@/lib/dados";
 
 type Vista = "grafo" | "laudo" | "como";
 
@@ -34,6 +34,7 @@ function Logo() {
 
 export default function Home() {
   const [demo, setDemo] = useState<Demo | null>(null);
+  const [validacao, setValidacao] = useState<BaseValidacao[]>([]);
   const [erro, setErro] = useState("");
   const [vista, setVista] = useState<Vista>("grafo");
   const [quadro, setQuadro] = useState(0);
@@ -55,6 +56,10 @@ export default function Home() {
         setQuadro(d.fotos.reduce((m, f, i) => dif(f) > dif(d.fotos[m]) ? i : m, 0));
       })
       .catch(() => setErro("Não consegui carregar demo.json. Rode `python -m motor.exportar --saida web/public/demo.json` e recarregue."));
+  }, []);
+
+  useEffect(() => {
+    fetch("validacao.json").then(r => r.ok ? r.json() : { bases: [] }).then(d => setValidacao(d.bases ?? [])).catch(() => setValidacao([]));
   }, []);
 
   // Navegação pelo hash, para o vídeo e os links caírem direto numa tela
@@ -159,10 +164,20 @@ export default function Home() {
           </section>
 
           <section className="numeros" aria-label="Resultado no momento escolhido">
-            <div><b>{pct(foto.recall_c)}</b><span>dos laranjas encontrados</span><em>{pct(foto.recall_s)} sozinha</em></div>
-            <div><b>{pct(foto.protegido_c)}</b><span>do dinheiro de golpe dava para segurar</span><em>{pct(foto.protegido_s)} sozinha</em></div>
-            <div><b>{numeros.med !== null ? `${numeros.med} h` : "—"}</b><span>antes, na mediana, para achar cada anel</span><em>vantagem sobre a instituição sozinha</em></div>
-            <div><b>{numeros.falsosC}</b><span>alarmes falsos</span><em>{numeros.falsosS} sozinha · {demo.meta.clientes_membros.toLocaleString("pt-BR")} clientes</em></div>
+            {[
+              { v: foto.recall_c, s: foto.recall_s, rot: "dos laranjas encontrados", forte: true },
+              { v: foto.protegido_c, s: foto.protegido_s, rot: "do dinheiro de golpe caiu em conta já marcada" },
+            ].map(x => (
+              <div key={x.rot}>
+                <b className={x.forte ? "vermelho" : ""}>{pct(x.v)}</b><span>{x.rot}</span>
+                <div className="duas-barras" aria-hidden="true">
+                  <i className="b-c" style={{ width: pct(x.v) }} /><i className="b-s" style={{ width: pct(x.s) }} />
+                </div>
+                <em><i className="leg-c" />juntas {pct(x.v)} · <i className="leg-s" />sozinha {pct(x.s)}</em>
+              </div>
+            ))}
+            <div><b>{numeros.med !== null ? `${numeros.med} h` : "—"}</b><span>de vantagem na mediana para achar um anel</span><em>{numeros.antes} de {numeros.nAneis} anéis achados antes da instituição sozinha; os outros empatam</em></div>
+            <div><b>{numeros.falsosC}</b><span>alarmes falsos</span><em>{numeros.falsosS} sozinha · {demo.meta.clientes_membros.toLocaleString("pt-BR")} clientes nas 4</em></div>
           </section>
 
           <section className="palco" aria-label="Grafos">
@@ -223,6 +238,31 @@ export default function Home() {
             <Aneis demo={demo} t={t} />
           </section>
 
+          {validacao.length > 0 && <section className="secao">
+            <div className="secao-cab">
+              <h2>Validação fora do nosso gerador</h2>
+              <p>O mesmo motor, sem nenhum ajuste, em bases que não fizemos. Faixa = menor e maior valor entre as sementes.</p>
+            </div>
+            <div className="validacao">
+              {validacao.map(b => (
+                <article key={b.nome} className={b.nota ? "val-fora" : ""}>
+                  <header><h3>{b.nome}</h3><span>{b.sementes} {b.sementes === 1 ? "rodada" : "sementes"}</span></header>
+                  <p className="val-desc">{b.descricao}</p>
+                  <div className="val-linha"><span>Laranjas encontrados</span>
+                    <div className="val-barra" aria-label={`sozinha ${faixaPct(b.recall_s)}, consórcio ${faixaPct(b.recall_c)}`}>
+                      <i className="faixa-s" style={{ left: pct(b.recall_s[0]), width: `calc(${pct(b.recall_s[1])} - ${pct(b.recall_s[0])} + 4px)` }} />
+                      <i className="faixa-c" style={{ left: pct(b.recall_c[0]), width: `calc(${pct(b.recall_c[1])} - ${pct(b.recall_c[0])} + 4px)` }} />
+                    </div>
+                    <b>{faixaPct(b.recall_s)} → {faixaPct(b.recall_c)}</b></div>
+                  <div className="val-linha"><span>Precisão do consórcio</span><div /><b>{faixaPct(b.prec_c)}</b></div>
+                  <div className="val-linha"><span>Dinheiro em conta já marcada</span><div /><b>{b.din_s ? `${faixaPct(b.din_s)} → ${faixaPct(b.din_c)}` : "—"}</b></div>
+                  {b.nota && <p className="val-nota">{b.nota}</p>}
+                </article>
+              ))}
+            </div>
+            <p className="nota-rodape">Em nenhuma base um laranja foi marcado antes do primeiro golpe que recebeu. O dinheiro que dá para segurar vem dos golpes seguintes na mesma conta. No PixSim, os laranjas a mais que o consórcio acha só ficam evidentes depois de usados, por isso o dinheiro não sobe.</p>
+          </section>}
+
           <section className="secao">
             <div className="secao-cab">
               <h2>Contas marcadas agora <span className="contagem">{marcadasAgora.length}</span></h2>
@@ -246,7 +286,7 @@ export default function Home() {
             </div>
           </section>
 
-          {numeros.faixaS && <p className="nota-rodape">Simulação com semente 42. Em {numeros.nSem} sementes, a instituição sozinha acha de {numeros.faixaS} dos laranjas e o consórcio, de {numeros.faixaC}. Dados sintéticos, gerados pelo próprio projeto; não medem o mundo real.</p>}
+          <p className="nota-rodape">Tela: semente 42 do gerador do Hórus, fotos a cada 6 h. Dados sintéticos.</p>
         </>}
 
         {vista === "laudo" && demo.laudos[laudoI] &&
@@ -254,19 +294,56 @@ export default function Home() {
 
         {vista === "como" && <article className="como">
           <span className="eyebrow">Como funciona</span>
-          <h1>Quatro passos, nenhum CPF compartilhado.</h1>
+          <h1>Nenhuma conta sai da instituição com nome ou CPF.</h1>
           <ol className="passos">
-            <li><b>Cada instituição dá nota às próprias contas.</b><p>Repasse em menos de 1 hora, conta nova recebendo muito, Pix de teste de centavos, contestação no MED. Acima de {demo.meta.fraca} pontos a conta vira suspeita fraca; acima de {demo.meta.forte}, marcada.</p></li>
-            <li><b>As suspeitas fracas vão para o hub, pseudonimizadas.</b><p>Cada conta vira um token HMAC. Vão junto a nota, os motivos e os repasses rápidos que tocam a conta. Nome, CPF e saldo ficam na instituição.</p></li>
-            <li><b>O hub roda a mesma análise de rede com tudo junto.</b><p>Uma conta que troca repasses com outras suspeitas, em outras instituições, sobe de nota. Anéis partidos entre quatro instituições se fecham.</p></li>
-            <li><b>Muninn segue o dinheiro de um Pix contestado.</b><p>Até 5 camadas, janela de 24 h, valor mínimo de R$ 200. O laudo sai em português, montado só com fatos calculados, e serve de registro da fundada suspeita.</p></li>
+            <li><b>Cada instituição dá nota às próprias contas.</b><p>Repassar em menos de 1 hora 60% ou mais do que recebeu (+30) ou de 30% a 60% (+15), com pelo menos R$ 1 mil recebidos; conta com menos de 90 dias que já recebeu R$ 3 mil (+15); Pix de teste de centavos (+10); dinheiro de 5 ou mais pessoas em 7 dias, repassando (+10); Pix contestado no MED (+40). A partir de {demo.meta.fraca} pontos a conta vira suspeita fraca e vai para o consórcio.</p></li>
+            <li><b>A conta vira um token que nem o hub nem os outros membros conseguem reverter.</b><p>O membro cega o identificador e o hub aplica a chave dele sem ver o que está dentro (OPRF sobre Ed25519). Vão ao hub o token, a nota, os motivos e os repasses rápidos que tocam a conta.</p></li>
+            <li><b>O hub roda a mesma análise de rede com tudo junto.</b><p>Cada vizinho suspeito soma 15 pontos (até 3), duas ou mais outras instituições relatando a conta somam 10, e anel de 4 ou mais contas soma 10. A partir de {demo.meta.forte} a conta é marcada, mas só se alguma instituição já tinha dado nota a ela: a rede reforça, não acusa sozinha.</p></li>
+            <li><b>Muninn segue o dinheiro de um Pix contestado.</b><p>Até 5 camadas, janela de 24 h, valor mínimo de R$ 200. O laudo é montado com os fatos calculados e serve de registro da fundada suspeita (Res. BCB 501/2025).</p></li>
           </ol>
-          <h2>O que ainda não resolvemos</h2>
+
+          <h2>O token, passo a passo</h2>
+          <figure className="protocolo">
+            <svg viewBox="0 0 760 230" role="img" aria-label="Membro cega o identificador, hub aplica a chave k, membro tira a cegueira e obtém o token">
+              <rect x="10" y="40" width="210" height="150" rx="18" className="p-caixa" />
+              <rect x="540" y="40" width="210" height="150" rx="18" className="p-caixa" />
+              <text x="115" y="72" className="p-tit">Membro</text>
+              <text x="115" y="96" className="p-txt">tem a chave m</text>
+              <text x="115" y="140" className="p-mono">x = H(HMACₘ(conta))</text>
+              <text x="115" y="166" className="p-mono">token = r⁻¹ · y</text>
+              <text x="645" y="72" className="p-tit">Hub</text>
+              <text x="645" y="96" className="p-txt">tem a chave k</text>
+              <text x="645" y="150" className="p-mono">y = k · a</text>
+              <line x1="230" y1="118" x2="530" y2="118" className="p-seta" markerEnd="url(#seta)" />
+              <line x1="530" y1="160" x2="230" y2="160" className="p-seta" markerEnd="url(#seta)" />
+              <text x="380" y="108" className="p-mono">a = r · x   (cego)</text>
+              <text x="380" y="182" className="p-mono">y</text>
+              <defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" className="p-ponta" /></marker></defs>
+            </svg>
+            <figcaption>O hub não tem m, então não consegue testar contas. O membro não tem k, então não calcula token sem pedir ao hub, e cada pedido fica registrado.</figcaption>
+          </figure>
+
+          {demo.meta.pedidos_hub && <>
+            <h2>Registro do hub nesta simulação</h2>
+            <p className="sub">Um membro que pede muito mais tokens do que tem clientes está testando CPFs: é ataque de dicionário e aparece aqui.</p>
+            <div className="tbl">
+              <table>
+                <thead><tr><th>Membro</th><th>Tokens pedidos</th><th>Clientes</th><th>Situação</th></tr></thead>
+                <tbody>{Object.entries(demo.meta.pedidos_hub).map(([m, v]) => (
+                  <tr key={m}><td>{m}</td><td className="num">{v.tokens}</td><td className="num">{v.clientes}</td>
+                    <td>{v.tokens > 2 * v.clientes ? <span className="selo selo-marcada">acima do limite</span> : "normal"}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </>}
+
+          <h2>Limites que continuam</h2>
           <ul className="limites">
-            <li><b>Chave compartilhada.</b> Com uma chave HMAC comum, um membro poderia testar CPFs e descobrir suspeitos de outro. A correção é um OPRF, em que o hub calcula o token sem ver o CPF.</li>
-            <li><b>Validação externa.</b> No PixSim, um simulador de golpe Pix independente, calibrado com dados do BCB (Zeimarani et al., 2026), o consórcio achou de 50% a 56% dos laranjas, contra 40% a 48% de cada instituição sozinha, em 3 sementes. Mas a precisão caiu para 83% a 90%: as contas de saída, como lojas e corretoras que recebem de muitos laranjas, viraram alarme falso. E o dinheiro protegido quase não mudou. Na base IBM AMLworld, que simula lavagem corporativa lenta, as regras de repasse em 1 hora não acharam nada: é outro crime.</li>
-            <li><b>Precisão perfeita só no nosso gerador.</b> No nosso gerador há de 0 a 1 alarme falso por simulação; no PixSim, de 9 a 16. A próxima regra é não somar pontos de rede a contas PJ que recebem de muitos pagadores lícitos.</li>
-            <li><b>Antes do MED, nem sempre.</b> O consórcio acha os anéis antes da instituição sozinha, mas antes da primeira contestação só em {numeros.antesMed} de {numeros.nAneis}.</li>
+            <li><b>Laranja só é marcado depois do primeiro golpe.</b> Em nenhuma base o motor marcou uma conta antes de ela receber dinheiro de golpe. O que dá para segurar são os golpes seguintes na mesma conta.</li>
+            <li><b>No PixSim, o consórcio acha mais laranjas, mas não segura mais dinheiro.</b> Os laranjas extras ficam evidentes depois de usados.</li>
+            <li><b>Conta de fora do consórcio nunca é marcada.</b> Sem sinal próprio ela fica como suspeita, para o consórcio avisar a instituição dona.</li>
+            <li><b>Hub e membro juntos quebram o sigilo.</b> Com m e k na mesma mão dá para testar contas. A defesa é contratual e de auditoria, não criptográfica.</li>
+            <li><b>Lavagem lenta fica fora.</b> Na base IBM AMLworld, onde o dinheiro sujo leva 28 h na mediana para sair, as regras de repasse em 1 hora não marcaram nenhuma conta.</li>
           </ul>
         </article>}
       </main>

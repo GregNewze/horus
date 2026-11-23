@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .consorcio import modo_consorcio, modo_sozinha, token
+from .consorcio import destokenizar, modo_consorcio, modo_sozinha
 from .sinais import carregar, pontuar_local
 
 
@@ -32,7 +32,7 @@ def rodar_dados(contas, txs, contest, inst, gab, passo_h):
     nos_membros = set(contas.index[contas["banco"].isin(membros)])
     laranja = {c for c, p in papel.items() if p in ("laranja", "coletora")}
     alvo = laranja & nos_membros
-    detok = {token(i): i for i in contas.index}  # só a avaliação reverte tudo; o hub não tem isso
+    detok = destokenizar(contas.index)  # só a avaliação reverte tudo; o hub não tem isso
 
     fotos = pd.date_range(txs["ts"].min().normalize() + pd.Timedelta(hours=passo_h),
                           txs["ts"].max().ceil("D"), freq=f"{passo_h}h")

@@ -29,6 +29,7 @@ export type Demo = {
     inicio: string; fim: string; passo_h: number; fraca: number; forte: number;
     clientes_membros: number; laranjas_membros: number; golpe_total_membros: number;
     instituicoes: { nome: string; consorcio: boolean }[]; sementes: Semente[] | null;
+    pedidos_hub?: Record<string, { tokens: number; clientes: number }>;
   };
   nos: No[]; arestas: Aresta[]; fotos: Foto[]; laudos: Laudo[]; aneis: Anel[];
 };
@@ -115,3 +116,11 @@ export function layout(demo: Demo, W = 1000) {
   const H = topo + 40 + Math.ceil(soltas.length / porLinha) * 46 + 10;
   return { pos, W, H, topo };
 }
+
+export type BaseValidacao = {
+  nome: string; descricao: string; sementes: number;
+  recall_s: [number, number]; recall_c: [number, number]; prec_c: [number, number] | null;
+  din_s: [number, number] | null; din_c: [number, number] | null; nota?: string;
+};
+export const faixaPct = (f: [number, number] | null) =>
+  !f ? "—" : Math.round(f[0] * 100) === Math.round(f[1] * 100) ? pct(f[0]) : `${Math.round(f[0] * 100)}–${pct(f[1])}`;

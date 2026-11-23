@@ -13,7 +13,7 @@ from pathlib import Path
 import networkx as nx
 import pandas as pd
 
-from .consorcio import modo_consorcio, modo_sozinha, token
+from .consorcio import destokenizar, modo_consorcio, modo_sozinha, pedidos_ao_hub, token_conta
 from .muninn import laudo, rastrear
 from .sinais import FORTE, FRACA, carregar, pontuar_local
 
@@ -48,7 +48,7 @@ def exportar(pasta, passo_h, n_laudos=6):
     nos_membros = set(contas.index[contas["banco"].isin(membros)])
     laranja = {c for c, p in papel.items() if p in ("laranja", "coletora")}
     alvo = laranja & nos_membros
-    detok = {token(i): i for i in contas.index}  # só a demo reverte; o hub não tem esta tabela
+    detok = destokenizar(contas.index)  # só a demo reverte; o hub não tem esta tabela
     golpes = txs[txs["id"].map(gab["tipo_tx"]).eq("golpe") & txs["destino"].isin(nos_membros)]
     total_golpe = float(golpes["valor"].sum())
 
@@ -107,7 +107,7 @@ def exportar(pasta, passo_h, n_laudos=6):
     pos = nx.spring_layout(g, seed=7, k=0.35, iterations=200)
     nos = [{"id": n, "banco": contas.at[n, "banco"], "membro": n in nos_membros, "papel": papel[n],
             "x": round(float(pos[n][0]), 4), "y": round(float(pos[n][1]), 4),
-            "token": token(n), "motivos": [{"frase": m, "pontos": pontos_do_motivo(m)} for m in motivos_finais.get(n, [])],
+            "token": token_conta(n), "motivos": [{"frase": m, "pontos": pontos_do_motivo(m)} for m in motivos_finais.get(n, [])],
             "marcada_s": str(primeira["s"][n]) if n in primeira["s"] else None,
             "marcada_c": str(primeira["c"][n]) if n in primeira["c"] else None} for n in sorted(ids)]
     lista_arestas = [{**a, "valor": round(a["valor"], 2)} for a in arestas.values() if a["o"] in ids and a["d"] in ids]
@@ -141,14 +141,16 @@ def exportar(pasta, passo_h, n_laudos=6):
         aneis.append(linha)
 
     sementes = None
-    arq = Path("data/externo/sementes_ruido1.json")
+    arq = Path("data/externo/sementes_v4.json")
     if arq.exists():
         sementes = json.load(open(arq, encoding="utf-8"))
         sementes = [{k: x[k] for k in ("semente", "recall_sozinha", "recall_consorcio", "dinheiro_sozinha",
                                        "dinheiro_consorcio", "clientes")} for x in sementes]
 
     return {
-        "meta": {"sementes": sementes, "inicio": str(txs["ts"].min()), "fim": str(txs["ts"].max()), "passo_h": passo_h,
+        "meta": {"sementes": sementes,
+                 "pedidos_hub": {b: {"tokens": pedidos_ao_hub().get(b, 0), "clientes": int((contas["banco"] == b).sum())} for b in membros},
+                 "inicio": str(txs["ts"].min()), "fim": str(txs["ts"].max()), "passo_h": passo_h,
                  "fraca": FRACA, "forte": FORTE, "clientes_membros": len(nos_membros), "laranjas_membros": len(alvo),
                  "golpe_total_membros": round(total_golpe, 2),
                  "instituicoes": [{"nome": k, "consorcio": v["consorcio"]} for k, v in inst.items()]},

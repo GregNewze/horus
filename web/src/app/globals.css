@@ -242,3 +242,44 @@ tr:last-child td { border-bottom: 0; }
 @media (prefers-reduced-motion: reduce) { .btn-play { transition: none; } }
 .divisa { stroke: var(--line); stroke-width: 1; }
 .rotulo-soltas { font-family: var(--f-body); font-size: 19px; fill: var(--faint); }
+
+/* Números com duas barras */
+.numeros b.vermelho { color: var(--marcada); }
+.numeros > div:first-child b { color: inherit; }
+.numeros > div:first-child b.vermelho { color: var(--marcada); }
+.duas-barras { display: grid; gap: 3px; margin: 8px 0 4px; }
+.duas-barras i { display: block; height: 6px; border-radius: 3px; }
+.b-c { background: var(--marcada); }
+.b-s { background: var(--faint); }
+.numeros em i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: 0; }
+.leg-c { background: var(--marcada); } .leg-s { background: var(--faint); }
+
+/* Validação */
+.validacao { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.validacao article { background: var(--surface); border-radius: var(--r-lg); padding: 22px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 40px rgba(0,0,0,.05); display: grid; gap: 12px; align-content: start; }
+.validacao header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.validacao h3 { font-size: 1.3rem; font-weight: 600; }
+.validacao header span { font-size: .8rem; color: var(--muted); }
+.val-desc { font-size: .88rem; color: var(--muted); min-height: 2.8em; }
+.val-linha { display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid var(--soft); }
+.val-linha > span { font-size: .8rem; color: var(--muted); font-weight: 600; }
+.val-linha > b { font-family: var(--f-display); font-size: 1.35rem; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.val-linha > div:empty { display: none; }
+.val-barra { position: relative; height: 22px; background: var(--soft); border-radius: 6px; }
+.val-barra i { position: absolute; height: 8px; border-radius: 4px; min-width: 4px; }
+.faixa-s { top: 3px; background: var(--faint); }
+.faixa-c { top: 11px; background: var(--marcada); }
+.val-fora { opacity: .85; }
+.val-nota { font-size: .85rem; color: var(--ink); background: var(--soft); border-radius: 10px; padding: 10px 12px; }
+
+/* Protocolo */
+.protocolo { margin: 0; display: grid; gap: 10px; background: var(--surface); border-radius: var(--r-lg); padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 40px rgba(0,0,0,.05); overflow-x: auto; }
+.protocolo svg { width: 100%; min-width: 560px; height: auto; }
+.protocolo figcaption { font-size: .9rem; color: var(--muted); }
+.p-caixa { fill: var(--soft); }
+.p-tit { font-family: var(--f-display); font-size: 22px; font-weight: 600; fill: var(--ink); text-anchor: middle; }
+.p-txt { font-size: 14px; fill: var(--muted); text-anchor: middle; }
+.p-mono { font-family: var(--f-mono); font-size: 14px; fill: var(--ink); text-anchor: middle; }
+.p-seta { stroke: var(--ink); stroke-width: 1.6; }
+.p-ponta { fill: var(--ink); }
+@media (max-width: 1000px) { .validacao { grid-template-columns: 1fr; } }
