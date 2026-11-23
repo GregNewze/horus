@@ -6,6 +6,7 @@ import Grafo from "@/components/Grafo";
 import PainelConta from "@/components/PainelConta";
 import LaudoMuninn from "@/components/LaudoMuninn";
 import Aneis from "@/components/Aneis";
+import Apresentacao from "@/components/Apresentacao";
 import { BANCOS, BaseValidacao, Demo, LARANJA, dataHora, faixaPct, horas, mediana, ms, pct } from "@/lib/dados";
 
 type Vista = "grafo" | "laudo" | "como";
@@ -35,6 +36,7 @@ function Logo() {
 export default function Home() {
   const [demo, setDemo] = useState<Demo | null>(null);
   const [validacao, setValidacao] = useState<BaseValidacao[]>([]);
+  const [apresentando, setApresentando] = useState(false);
   const [erro, setErro] = useState("");
   const [vista, setVista] = useState<Vista>("grafo");
   const [quadro, setQuadro] = useState(0);
@@ -56,6 +58,17 @@ export default function Home() {
         setQuadro(d.fotos.reduce((m, f, i) => dif(f) > dif(d.fotos[m]) ? i : m, 0));
       })
       .catch(() => setErro("Não consegui carregar demo.json. Rode `python -m motor.exportar --saida web/public/demo.json` e recarregue."));
+  }, []);
+
+  // Apresentação abre na primeira visita; depois só pelo botão no topo
+  useEffect(() => {
+    let visto = false;
+    try { visto = localStorage.getItem("horus-apresentacao") === "1"; } catch { visto = false; }
+    if (!visto) setApresentando(true);
+  }, []);
+  const fecharApresentacao = useCallback(() => {
+    setApresentando(false);
+    try { localStorage.setItem("horus-apresentacao", "1"); } catch { /* sem armazenamento: abre de novo na próxima visita */ }
   }, []);
 
   useEffect(() => {
@@ -151,7 +164,7 @@ export default function Home() {
             {([["grafo", "Sozinha × Juntas"], ["laudo", "Laudos"], ["como", "Como funciona"]] as [Vista, string][]).map(([v, r]) =>
               <button key={v} type="button" aria-current={vista === v ? "page" : undefined} onClick={() => ir(v)}>{r}</button>)}
           </nav>
-          <span className="pilula">Dados sintéticos</span>
+          <button type="button" className="pilula botao" onClick={() => setApresentando(true)}>Ver apresentação</button>
         </div>
       </header>
 
@@ -179,6 +192,12 @@ export default function Home() {
             <div><b>{numeros.med !== null ? `${numeros.med} h` : "—"}</b><span>de vantagem na mediana para achar um anel</span><em>{numeros.antes} de {numeros.nAneis} anéis achados antes da instituição sozinha; os outros empatam</em></div>
             <div><b>{numeros.falsosC}</b><span>alarmes falsos</span><em>{numeros.falsosS} sozinha · {demo.meta.clientes_membros.toLocaleString("pt-BR")} clientes nas 4</em></div>
           </section>
+
+          <ol className="como-ler" aria-label="Como ler a simulação">
+            <li><b>Cada bolinha é uma conta.</b> A letra e a cor da borda dizem o banco.</li>
+            <li><b>Amarela tracejada:</b> suspeita fraca. <b className="vermelho">Vermelha:</b> marcada, dá para segurar o dinheiro.</li>
+            <li><b>Aperte play</b> e compare: à esquerda cada banco sozinho, à direita os quatro juntos.</li>
+          </ol>
 
           <section className="palco" aria-label="Grafos">
             <div className="palco-cab">
@@ -353,6 +372,8 @@ export default function Home() {
         <PainelConta demo={demo} no={no} foto={foto} t={t} temLaudo={laudoDaConta >= 0} reduzir={reduzir}
           fechar={() => setSel(null)} abrirLaudo={() => { if (laudoDaConta >= 0) { setLaudoI(laudoDaConta); setSel(null); ir("laudo"); } }} />
       </>}
+
+      {apresentando && <Apresentacao demo={demo} fechar={fecharApresentacao} reduzir={reduzir} />}
 
       <footer className="rodape">Hórus · time Northern · Hack Brasil 2026, trilha Cibersegurança</footer>
     </div>

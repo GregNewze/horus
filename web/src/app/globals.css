@@ -283,3 +283,70 @@ tr:last-child td { border-bottom: 0; }
 .p-seta { stroke: var(--ink); stroke-width: 1.6; }
 .p-ponta { fill: var(--ink); }
 @media (max-width: 1000px) { .validacao { grid-template-columns: 1fr; } }
+
+/* Como ler */
+.como-ler { list-style: none; margin: -24px 0 -32px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; counter-reset: c; }
+.como-ler li { counter-increment: c; background: var(--soft); border-radius: var(--r); padding: 14px 16px 14px 48px; position: relative; font-size: .9rem; color: var(--muted); }
+.como-ler li::before { content: counter(c); position: absolute; left: 16px; top: 13px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--surface); font-size: .75rem; font-weight: 700; display: grid; place-items: center; }
+.como-ler b { color: var(--ink); font-weight: 600; }
+.como-ler b.vermelho, .vermelho { color: var(--marcada); }
+.pilula.botao { background: var(--ink); color: var(--surface); border-color: var(--ink); cursor: pointer; padding: 6px 14px; }
+
+/* Apresentação */
+.ap { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: grid; grid-template-rows: auto 1fr auto; overflow-y: auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) max(20px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 16px) max(20px, env(safe-area-inset-left, 0px)); }
+.ap-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.ap-marca { font-family: var(--f-display); font-weight: 700; font-size: 1.1rem; }
+.ap-pontos { display: flex; gap: 8px; }
+.ap-pontos button { width: 28px; height: 6px; border-radius: 3px; border: 0; background: var(--line); cursor: pointer; padding: 0; }
+.ap-pontos button[aria-current="true"] { background: var(--ink); }
+.ap-pular { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: .9rem; padding: 8px; }
+.ap-cena { max-width: 1100px; width: 100%; margin: 0 auto; display: grid; align-content: center; gap: 28px; padding: 20px 0; }
+.ap-texto { display: grid; gap: 14px; max-width: 760px; }
+.ap-num { font-size: .85rem; font-weight: 600; color: var(--marcada); }
+.ap-texto h2 { font-size: clamp(2rem, 4.6vw, 3.6rem); font-weight: 700; letter-spacing: -0.035em; }
+.ap-texto p { font-size: clamp(1.05rem, 1.5vw, 1.3rem); color: var(--muted); line-height: 1.5; max-width: 60ch; }
+.ap-texto p b { color: var(--ink); }
+.ap-arte { background: var(--surface); border-radius: var(--r-lg); padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 40px rgba(0,0,0,.06); }
+.ap-svg { width: 100%; height: auto; display: block; min-width: 520px; }
+.ap-anel { max-width: 500px; margin: 0 auto; min-width: 0; }
+.ap-vitima { fill: var(--soft); stroke: var(--faint); stroke-width: 2; }
+.ap-conta { fill: var(--surface); stroke: var(--ink); stroke-width: 3; }
+.ap-fraca { fill: color-mix(in srgb, var(--fraca) 26%, white); stroke-dasharray: 5 4; }
+.ap-marcada { fill: var(--marcada); }
+.ap-marcada + .ap-rot, .ap-marcada ~ .ap-rot, .ap-marcada ~ .ap-nota { fill: #fff; }
+.ap-banco { fill: none; stroke-width: 2; stroke-dasharray: 6 5; }
+.ap-rot { font-family: var(--f-display); font-size: 13px; font-weight: 600; fill: var(--ink); text-anchor: middle; }
+.ap-rot.mono { font-family: var(--f-mono); font-size: 12px; }
+.ap-nota { font-family: var(--f-display); font-size: 15px; font-weight: 700; fill: var(--ink); text-anchor: middle; }
+.ap-sub { font-size: 12px; fill: var(--muted); text-anchor: middle; }
+.ap-linha { stroke: var(--faint); stroke-width: 2.5; fill: none; stroke-dasharray: 1; }
+.ap-linha-red { stroke: var(--marcada); stroke-width: 3; }
+.ap-ponta { fill: var(--faint); }
+.moeda { fill: var(--marcada); }
+.ap-vitima[stroke-dasharray] { fill: none; }
+.ap-medidor { display: grid; gap: 8px; max-width: 560px; margin: 16px auto 0; font-size: .9rem; color: var(--muted); text-align: center; }
+.ap-barra { position: relative; height: 12px; background: var(--soft); border-radius: 99px; margin-bottom: 18px; }
+.ap-barra i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; }
+.ap-barra i.amb { background: var(--fraca); } .ap-barra i.red { background: var(--marcada); }
+.ap-barra b { position: absolute; top: -6px; height: 24px; border-left: 2px solid var(--ink); padding-left: 6px; padding-top: 26px; font-size: .75rem; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.ap-token { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.ap-cartao { background: var(--soft); border-radius: 20px; padding: 22px 26px; display: grid; gap: 6px; min-width: 240px; }
+.ap-cartao span { font-size: .8rem; font-weight: 600; color: var(--muted); }
+.ap-cartao b { font-size: 1.6rem; }
+.ap-cartao em { font-style: normal; font-size: .88rem; color: var(--muted); }
+.ap-cartao.escuro { background: var(--ink); color: var(--surface); }
+.ap-cartao.escuro span, .ap-cartao.escuro em { color: var(--faint); }
+.ap-seta { width: 120px; height: 40px; }
+.ap-resumo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: 0; overflow: hidden; }
+.ap-resumo > div { padding: 28px 26px; display: grid; gap: 6px; align-content: start; }
+.ap-resumo > div + div { border-left: 1px solid var(--soft); }
+.ap-resumo b { font-family: var(--f-display); font-size: clamp(2.6rem, 5vw, 4rem); font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
+.ap-resumo span { font-weight: 500; }
+.ap-resumo em { font-style: normal; font-size: .88rem; color: var(--muted); }
+.ap-rodape { color: var(--muted); max-width: 70ch; }
+.ap-nav { display: flex; justify-content: space-between; max-width: 1100px; width: 100%; margin: 0 auto; gap: 12px; }
+.ap-voltar { background: var(--soft); border: 0; border-radius: 99px; padding: 13px 24px; font-weight: 600; cursor: pointer; min-height: 48px; }
+.ap-voltar:disabled { opacity: .4; cursor: default; }
+.ap-avancar { background: var(--ink); color: var(--surface); border: 0; border-radius: 99px; padding: 13px 28px; font-weight: 600; cursor: pointer; min-height: 48px; }
+@media (max-width: 760px) { .como-ler, .ap-resumo { grid-template-columns: 1fr; } .ap-resumo > div + div { border-left: 0; border-top: 1px solid var(--soft); } .como-ler { margin: -16px 0 -20px; } }
