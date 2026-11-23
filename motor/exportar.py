@@ -23,7 +23,7 @@ def pontos_do_motivo(frase):
     import re
     if frase.startswith("repassou"):
         return 30 if int(re.search(r"(\d+)%", frase).group(1)) >= 60 else 15
-    if frase.startswith("conta com"):
+    if frase.startswith("aberta há"):
         return 15
     if "Pix de teste" in frase and frase.startswith("recebeu"):
         return 10
@@ -31,8 +31,8 @@ def pontos_do_motivo(frase):
         return 10
     if "contestado" in frase:
         return 40
-    if frase.startswith("trocou repasses"):
-        return 15 * min(3, int(re.search(r"com (\d+) conta", frase).group(1)))
+    if frase.startswith("ligada a"):
+        return 15 * min(3, int(re.search(r"ligada a (\d+) outra", frase).group(1)))
     if "outras instituições relataram" in frase:
         return 10
     if frase.startswith("faz parte de um anel"):

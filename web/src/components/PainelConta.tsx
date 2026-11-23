@@ -74,7 +74,7 @@ export default function PainelConta({ demo, no, foto, t, temLaudo, abrirLaudo, f
       <section className="g-bloco">
         <h3>O que o hub recebeu</h3>
         <div className="token"><code>{no.token}</code><button type="button" className="btn-texto" onClick={copiar}>{copiado ? "Copiado" : "Copiar"}</button></div>
-        <p className="sub">Um token HMAC no lugar da conta, mais a nota e os motivos. Nome, CPF e saldo ficam na instituição. Pseudonimizado, não anônimo.</p>
+        <p className="sub">Um token OPRF no lugar da conta, mais a nota e os motivos. Nome, CPF e saldo ficam na instituição. Pseudonimizado, não anônimo.</p>
       </section>
 
       <button type="button" className="btn-principal largo" onClick={abrirLaudo} disabled={!temLaudo}>

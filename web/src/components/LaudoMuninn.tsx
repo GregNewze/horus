@@ -70,7 +70,7 @@ export default function LaudoMuninn({ demo, laudo, indice, trocar, voltar }: Pro
                 return (
                   <div className="cartao-conta" key={id} style={{ borderColor: corBanco(bancoDe(id)) }}>
                     <div className="linha"><b className="mono">{id}</b>{marcada(id) && <span className="selo selo-marcada">marcada</span>}</div>
-                    <span className="sub" style={{ color: corBanco(bancoDe(id)) }}>{bancoDe(id) || "conta de fora"}</span>
+                    <span className="sub">{bancoDe(id) || "conta de fora"}</span>
                     {entradas.map(s => <span key={s.tx} className="mono entrada">← {reais(s.valor)} às {dataHora(s.quando).slice(6)} de {s.origem}</span>)}
                   </div>
                 );

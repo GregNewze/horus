@@ -260,7 +260,7 @@ export default function Home() {
           {validacao.length > 0 && <section className="secao">
             <div className="secao-cab">
               <h2>Validação fora do nosso gerador</h2>
-              <p>O mesmo motor, sem nenhum ajuste, em bases que não fizemos. Faixa = menor e maior valor entre as sementes.</p>
+              <p>O mesmo motor, sem nenhum ajuste, em bases que não fizemos. Cinza: cada instituição sozinha. Vermelho: o consórcio. Cada faixa vai do menor ao maior valor entre as sementes.</p>
             </div>
             <div className="validacao">
               {validacao.map(b => (

@@ -61,7 +61,12 @@ def gerar(n_contas, n_redes, dias, semente, ruido=1.0):
         contas.append(c)
         return c
 
+    LICITAS = {"salario", "compra", "p2p", "racha", "venda", "fornecedor", "centavos"}
+
     def add_tx(origem, destino, valor, ts, tipo):
+        # Conta lícita aberta no meio do mês não movimenta antes de existir.
+        if tipo in LICITAS and ts.date().isoformat() < max(origem["criada_em"], destino["criada_em"]):
+            return None
         txs.append({"id": None, "ts": ts, "origem": origem, "destino": destino,
                     "valor": round(max(valor, 0.01), 2), "tipo_real": tipo})
         return txs[-1]

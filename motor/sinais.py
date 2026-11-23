@@ -137,13 +137,13 @@ def pontuar_local(contas, txs, contest, ate, donas):
         if r.taxa_repasse >= 0.3 and r.recebido >= 1000:
             m.append(f"repassou {r.taxa_repasse:.0%} do que recebeu em menos de 1 hora")
         if r.idade_dias < 90 and r.recebido >= 3000:
-            m.append(f"conta com {r.idade_dias} dias já recebeu R$ {r.recebido:,.0f}".replace(",", "."))
+            m.append(f"aberta há {r.idade_dias} dias e já recebeu R$ {r.recebido:,.0f}".replace(",", "."))
         if r.testes:
-            m.append(f"recebeu {r.testes} Pix de teste de centavos")
+            m.append("recebeu 1 Pix de teste, de centavos" if r.testes == 1 else f"recebeu {r.testes} Pix de teste, de centavos")
         if r.origens_7d >= 5 and r.taxa_repasse >= 0.3:
             m.append(f"dinheiro de {r.origens_7d} pessoas diferentes em 7 dias")
         if r.contestacoes:
-            m.append(f"{r.contestacoes} Pix recebido(s) contestado(s) no MED")
+            m.append("1 Pix contestado no MED" if r.contestacoes == 1 else f"{r.contestacoes} Pix contestados no MED")
         return m
 
     suspeitas = df[df["nota"] >= FRACA].copy()

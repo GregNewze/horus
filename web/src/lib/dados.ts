@@ -51,7 +51,7 @@ export const LARANJA = new Set(["laranja", "coletora"]);
 
 /** Motivos que a instituição calcula sozinha, com os próprios dados (motor/sinais.py). */
 export const ehSinalLocal = (frase: string) =>
-  /^(repassou|conta com|recebeu \d+ Pix de teste|dinheiro de|\d+ Pix recebido)/.test(frase);
+  /^(repassou|aberta há|recebeu \d+ Pix de teste|dinheiro de|\d+ Pix contestado)/.test(frase);
 
 export function estado(no: No, modo: Modo, foto: Foto, t: number): "neutra" | "fraca" | "marcada" {
   const quando = modo === "s" ? no.marcada_s : no.marcada_c;

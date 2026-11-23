@@ -1,10 +1,10 @@
 /* Hórus. Linha de produto da Apple: fundo claro, tipografia grande, muito ar, uma só cor forte (vermelho = marcada). */
 :root {
   --bg: #fbfbfd; --surface: #ffffff; --soft: #f5f5f7; --line: #e3e3e8; --grid: #e6e6eb;
-  --ink: #1d1d1f; --muted: #6e6e73; --faint: #a1a1a6;
+  --ink: #1d1d1f; --muted: #6e6e73; --faint: #8e8e93;
   --accent: #1d1d1f; --link: #0066cc;
-  --fraca: #ff9f0a; --marcada: #ff3b30; --ok: #248a3d;
-  --b-tambaqui: #34c759; --b-cupuacu: #af52de; --b-guarana: #007aff; --b-jaraqui: #a2845e; --b-fora: #b0b0b6;
+  --fraca: #ff9f0a; --marcada: #e0301e; --ok: #248a3d;
+  --b-tambaqui: #0e7c86; --b-cupuacu: #af52de; --b-guarana: #007aff; --b-jaraqui: #8a6d48; --b-fora: #b0b0b6;
   --r-lg: 28px; --r: 14px;
   color-scheme: light;
 }
@@ -98,7 +98,7 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
 .controle-rodape { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 0 4px; font-size: .85rem; color: var(--muted); }
 .check { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
 .check input { accent-color: var(--ink); width: 17px; height: 17px; }
-.dica { margin-left: auto; color: var(--faint); }
+.dica { margin-left: auto; color: var(--muted); }
 .btn-texto { background: none; border: 0; color: var(--link); cursor: pointer; padding: 6px 0; font-size: .88rem; }
 .btn-texto:hover { text-decoration: underline; }
 
@@ -111,7 +111,7 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
 
 .aneis { background: var(--surface); border-radius: var(--r-lg); padding: 24px 24px 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 40px rgba(0,0,0,.05); display: grid; gap: 2px; }
 .aneis-eixo { position: relative; height: 22px; margin-left: 110px; margin-right: 70px; }
-.aneis-eixo span { position: absolute; transform: translateX(-50%); font-size: .75rem; color: var(--faint); font-variant-numeric: tabular-nums; }
+.aneis-eixo span { position: absolute; transform: translateX(-50%); font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .agora-linha { position: absolute; top: 20px; width: 1px; height: 360px; background: color-mix(in srgb, var(--link) 50%, transparent); pointer-events: none; }
 .anel-linha { display: grid; grid-template-columns: 110px 1fr 70px; align-items: center; height: 42px; border-top: 1px solid var(--soft); }
 .anel-nome { display: flex; gap: 8px; align-items: baseline; }
@@ -135,6 +135,7 @@ tr:last-child td { border-bottom: 0; }
 .linha-sel td { background: var(--soft); }
 .link { background: none; border: 0; color: var(--link); cursor: pointer; padding: 2px 0; font-family: var(--f-mono); font-size: .88rem; }
 .nota-rodape { font-size: .82rem; color: var(--muted); max-width: 80ch; margin-top: -24px; }
+.validacao + .nota-rodape { margin-top: 4px; }
 
 /* Gaveta da conta */
 .veu { position: fixed; inset: 0; background: rgba(0,0,0,.18); z-index: 30; }
@@ -218,7 +219,7 @@ tr:last-child td { border-bottom: 0; }
 .limites { margin: 0; padding: 0; list-style: none; display: grid; gap: 16px; }
 .limites b { color: var(--ink); }
 
-.rodape { max-width: 1240px; margin: 0 auto; padding: 24px 20px 40px; color: var(--faint); font-size: .8rem; border-top: 1px solid var(--line); width: 100%; }
+.rodape { max-width: 1240px; margin: 0 auto; padding: 24px 20px 40px; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); width: 100%; }
 
 @media (max-width: 1000px) {
   .grafos, .laudo-corpo { grid-template-columns: 1fr; }
@@ -238,10 +239,15 @@ tr:last-child td { border-bottom: 0; }
   .anel-linha { grid-template-columns: 70px 1fr 50px; }
   .anel-nome span { display: none; }
   .conteudo { gap: 40px; }
+  .numeros > div { padding: 18px 14px; }
+  .numeros b { font-size: 2.1rem; }
+  .numeros span { font-size: .9rem; }
+  .segmentos button { font-size: .82rem; }
+  .barra-dentro > .pilula.botao { margin-left: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .btn-play { transition: none; } }
 .divisa { stroke: var(--line); stroke-width: 1; }
-.rotulo-soltas { font-family: var(--f-body); font-size: 19px; fill: var(--faint); }
+.rotulo-soltas { font-family: var(--f-body); font-size: 19px; fill: var(--muted); }
 
 /* Números com duas barras */
 .numeros b.vermelho { color: var(--marcada); }

@@ -73,7 +73,8 @@ def analisar(notas, motivos, dono, arestas, relatores):
         final[n] = base + bonus + extra
         m = list(motivos.get(n, []))
         if viz:
-            m.append(f"trocou repasses rápidos ou Pix de teste com {len(viz)} conta(s) suspeita(s)")
+            m.append("ligada a 1 outra conta suspeita por repasse rápido ou Pix de teste" if len(viz) == 1
+                     else f"ligada a {len(viz)} outras contas suspeitas por repasse rápido ou Pix de teste")
         if extra:
             m.append(f"{len(outras)} outras instituições relataram Pix suspeitos com esta conta")
         porque[n] = m
