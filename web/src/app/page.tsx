@@ -186,7 +186,7 @@ export default function Home() {
                 <div className="duas-barras" aria-hidden="true">
                   <i className="b-c" style={{ width: pct(x.v) }} /><i className="b-s" style={{ width: pct(x.s) }} />
                 </div>
-                <em><i className="leg-c" />juntas {pct(x.v)} · <i className="leg-s" />sozinha {pct(x.s)}</em>
+                <em><span className="nw"><i className="leg-c" />juntas {pct(x.v)}</span> · <span className="nw"><i className="leg-s" />sozinha {pct(x.s)}</span></em>
               </div>
             ))}
             <div><b>{numeros.med !== null ? `${numeros.med} h` : "—"}</b><span>de vantagem na mediana para achar um anel</span><em>{numeros.antes} de {numeros.nAneis} anéis achados antes da instituição sozinha; os outros empatam</em></div>

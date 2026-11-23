@@ -125,7 +125,8 @@ input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border-radius
 .pt { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); }
 .pt-s.on { background: var(--faint); border-color: var(--faint); }
 .pt-c.on { background: var(--marcada); border-color: var(--marcada); }
-.anel-ganho { text-align: right; font-family: var(--f-display); font-weight: 600; font-variant-numeric: tabular-nums; }
+.anel-ganho { text-align: right; font-family: var(--f-display); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.nw { white-space: nowrap; }
 
 .tbl { overflow-x: auto; background: var(--surface); border-radius: var(--r); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
 table { border-collapse: collapse; width: 100%; font-size: .9rem; min-width: 560px; }
