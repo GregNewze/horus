@@ -23,6 +23,8 @@ def carregar(pasta="data/out"):
     contas = pd.read_csv(pasta / "contas.csv", parse_dates=["criada_em"]).set_index("id")
     txs = pd.read_csv(pasta / "transacoes.csv", parse_dates=["ts"])
     contest = pd.DataFrame(json.load(open(pasta / "contestacoes.json", encoding="utf-8")))
+    if contest.empty:
+        contest = pd.DataFrame(columns=["tx_id", "aberta_em"])
     contest["aberta_em"] = pd.to_datetime(contest["aberta_em"])
     inst = json.load(open(pasta / "instituicoes.json", encoding="utf-8"))
     txs["banco_origem"] = txs["origem"].map(contas["banco"])
@@ -31,30 +33,65 @@ def carregar(pasta="data/out"):
     return contas, marcar_repasses(txs), contest, inst
 
 
-def marcar_repasses(txs):
-    """Para cada saída, quanto a conta tinha recebido na hora anterior.
+def marcar_repasses(txs, janela=JANELA_REPASSE):
+    """Para cada saída, quanto do dinheiro que entrou na última hora ainda estava disponível.
 
-    Um repasse é uma saída de pelo menos R$ 100 que acontece até 1 hora depois de uma entrada,
-    limitada ao valor que entrou. É o padrão do laranja: o dinheiro só passa.
+    Um repasse é uma saída de pelo menos R$ 100 em que pelo menos 30% do valor veio de entradas da
+    última hora. Cada real que entra só pode ser repassado uma vez: as saídas consomem as entradas
+    na ordem em que chegaram (primeiro que entra, primeiro que sai). Sem isso, duas saídas de
+    R$ 600 depois de uma entrada de R$ 1.000 contariam R$ 1.200 repassados.
     """
-    ent = txs[["destino", "ts", "valor"]].rename(columns={"destino": "conta"})
-    sai = txs[["origem", "ts", "valor", "id"]].rename(columns={"origem": "conta"})
-    ent = ent[ent["valor"] >= VALOR_TESTE].sort_values(["conta", "ts"])
-    entrada_1h = np.zeros(len(sai))
-    sai = sai.reset_index(drop=True)
-    grupos_ent = {k: (g["ts"].values, np.cumsum(g["valor"].values)) for k, g in ent.groupby("conta")}
-    for conta, g in sai.groupby("conta"):
-        if conta not in grupos_ent:
-            continue
-        ts_e, acum = grupos_ent[conta]
-        fim = np.searchsorted(ts_e, g["ts"].values, side="right")
-        ini = np.searchsorted(ts_e, (g["ts"] - JANELA_REPASSE).values, side="left")
-        tot = np.where(fim > 0, acum[np.maximum(fim - 1, 0)], 0) - np.where(ini > 0, acum[np.maximum(ini - 1, 0)], 0)
-        entrada_1h[g.index.values] = tot
-    sai["entrada_1h"] = entrada_1h
-    txs = txs.merge(sai[["id", "entrada_1h"]], on="id")
+    txs = txs.sort_values(["ts", "id"]).reset_index(drop=True)
+    n = len(txs)
+    ts = txs["ts"].values.astype("datetime64[s]").astype(np.int64)
+    org, dst, val = txs["origem"].values, txs["destino"].values, txs["valor"].values
+    jan = int(janela.total_seconds())
+    # Linha do tempo de cada conta: (momento, tipo 0 = entrada, tipo 1 = saída, índice da transação).
+    # No mesmo segundo a entrada vem antes da saída.
+    conta = np.concatenate([dst, org])
+    tipo = np.concatenate([np.zeros(n, np.int8), np.ones(n, np.int8)])
+    quando = np.concatenate([ts, ts])
+    idx = np.concatenate([np.arange(n), np.arange(n)])
+    ordem = np.lexsort((tipo, quando, conta))
+    conta, tipo, quando, idx = conta[ordem], tipo[ordem], quando[ordem], idx[ordem]
+    disponivel = np.zeros(n)
+    usado = np.zeros(n)
+    i = 0
+    total = len(conta)
+    while i < total:
+        j = i
+        c = conta[i]
+        fila = []  # [momento, valor restante] das entradas ainda na janela
+        cabeca = 0
+        soma = 0.0  # total ainda disponível na fila
+        while j < total and conta[j] == c:
+            k = idx[j]
+            if tipo[j] == 0:
+                if val[k] >= VALOR_TESTE:
+                    fila.append([quando[j], val[k]])
+                    soma += val[k]
+            else:
+                while cabeca < len(fila) and fila[cabeca][0] < quando[j] - jan:
+                    soma -= fila[cabeca][1]
+                    cabeca += 1
+                disp = max(soma, 0.0)
+                disponivel[k] = disp
+                resta = min(val[k], disp)
+                usado[k] = resta
+                soma -= resta
+                e = cabeca
+                while resta > 1e-9 and e < len(fila):
+                    tira = min(fila[e][1], resta)
+                    fila[e][1] -= tira
+                    resta -= tira
+                    e += 1
+                while cabeca < len(fila) and fila[cabeca][1] <= 1e-9:  # entradas já gastas saem da fila
+                    cabeca += 1
+            j += 1
+        i = j
+    txs["entrada_1h"] = disponivel
     txs["repasse"] = (txs["valor"] >= VALOR_MIN_REPASSE) & (txs["entrada_1h"] >= 0.3 * txs["valor"])
-    txs["valor_repassado"] = np.where(txs["repasse"], np.minimum(txs["valor"], txs["entrada_1h"]), 0.0)
+    txs["valor_repassado"] = np.where(txs["repasse"], usado, 0.0)
     txs["teste"] = txs["valor"] < VALOR_TESTE
     return txs
 

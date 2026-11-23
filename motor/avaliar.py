@@ -22,6 +22,11 @@ from .sinais import carregar, pontuar_local
 def rodar(pasta, passo_h):
     contas, txs, contest, inst = carregar(pasta)
     gab = json.load(open(Path(pasta) / "gabarito.json", encoding="utf-8"))
+    return rodar_dados(contas, txs, contest, inst, gab, passo_h)
+
+
+def rodar_dados(contas, txs, contest, inst, gab, passo_h):
+    """Mesma avaliação, com os dados já carregados (usado também na validação externa)."""
     papel = gab["papeis"]
     membros = [k for k, v in inst.items() if v["consorcio"]]
     nos_membros = set(contas.index[contas["banco"].isin(membros)])

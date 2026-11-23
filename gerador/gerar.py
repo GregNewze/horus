@@ -48,7 +48,8 @@ def sortear(rng, pesos):
     return rng.choices(list(pesos), weights=list(pesos.values()))[0]
 
 
-def gerar(n_contas, n_redes, dias, semente):
+def gerar(n_contas, n_redes, dias, semente, ruido=1.0):
+    """ruido multiplica os casos legítimos que parecem laranja (centavos e contestação contra inocente)."""
     rng = random.Random(semente)
     fim = INICIO + timedelta(days=dias)
     contas, txs, redes, contestacoes = [], [], [], []
@@ -133,6 +134,20 @@ def gerar(n_contas, n_redes, dias, semente):
     for r in range(n_redes):
         tres_camadas = rng.random() < 0.6
         camada1 = [laranja("laranja") for _ in range(rng.randint(4, 8))]
+        # Parte da camada 1 é PJ de fachada (65% dos golpes vão para conta de empresa, Silverguard):
+        # além do golpe, tem vendas comuns de clientes e paga fornecedor, o que dilui o repasse.
+        for m in camada1:
+            if rng.random() < 0.3:
+                forn = rng.choice(fornecedores)
+                for d in range(dias):
+                    if rng.random() < 0.4:
+                        dia = INICIO + timedelta(days=d, hours=rng.randint(8, 18))
+                        recebido = 0
+                        for c in rng.sample(todas_pessoas, rng.randint(2, 6)):
+                            v = rng.lognormvariate(4.2, 0.6)
+                            recebido += v
+                            add_tx(c, m, v, dia + timedelta(minutes=rng.randint(0, 240)), "venda")
+                        add_tx(m, forn, recebido * rng.uniform(0.6, 0.9), dia + timedelta(minutes=rng.randint(30, 420)), "fornecedor")
         camada2 = [laranja("laranja") for _ in range(rng.randint(2, 4))] if tres_camadas else []
         coletora = laranja("coletora")
         membros = camada1 + camada2 + [coletora]
@@ -144,7 +159,7 @@ def gerar(n_contas, n_redes, dias, semente):
 
         # Pix de teste: centavos para conferir se a conta recebe, pouco antes de começar
         for m in camada1 + camada2:
-            for _ in range(rng.randint(0, 2)):
+            for _ in range(rng.randint(1, 2) if rng.random() < 0.44 else 0):  # 44% dos laranjas (Data Rudder)
                 add_tx(coletora, m, rng.choice([0.01, 0.1, 1.0, rng.uniform(0.01, 2)]),
                        ini - timedelta(hours=rng.randint(1, 48)), "teste")
 
@@ -185,6 +200,24 @@ def gerar(n_contas, n_redes, dias, semente):
         # Ouroboros: parte do dinheiro volta para a camada 1 para parecer movimento legítimo
         for _ in range(rng.randint(2, 5)):
             add_tx(coletora, rng.choice(camada1), rng.uniform(100, 800), ts_aleatorio(ini, fim_rede), "ciclo")
+
+    # --- Ruído legítimo que o detector precisa aguentar ------------------------------------
+    # 2% das contas lícitas recebem um Pix de centavos (Data Rudder: 2% das lícitas recebem teste).
+    licitas = todas_pessoas + autonomos + comercios
+    for c in rng.sample(licitas, min(len(licitas), max(1, int(len(licitas) * 0.02 * ruido)))):
+        add_tx(rng.choice(todas_pessoas), c, rng.choice([0.01, 0.1, 1.0]), ts_aleatorio(), "centavos")
+    # Contestação contra inocente: cliente que contesta uma venda de autônomo ou loja (golpe do
+    # comprador, ou engano). Taxa sem fonte pública; 5% dos autônomos e 2% das lojas, uma vez cada.
+    vendas = {}
+    for t in txs:
+        if t["tipo_real"] in ("venda", "compra"):
+            vendas.setdefault(id(t["destino"]), []).append(t)
+    for c in (rng.sample(autonomos, min(len(autonomos), max(1, int(len(autonomos) * 0.05 * ruido))))
+              + rng.sample(comercios, min(len(comercios), max(1, int(len(comercios) * 0.02 * ruido))))):
+        if vendas.get(id(c)):
+            t = rng.choice(vendas[id(c)])
+            contestacoes.append({"tx": t, "vitima": t["origem"], "valor": t["valor"],
+                                 "aberta_em": t["ts"] + timedelta(hours=rng.randint(2, 120))})
 
     # IDs embaralhados: a ordem de criação não pode entregar quem é laranja
     rng.shuffle(contas)

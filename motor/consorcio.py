@@ -70,6 +70,9 @@ def modo_sozinha(banco, suspeitas, txs, ate):
     ar = arestas_suspeitas(txs, ate, set(minhas.index))
     arestas = list(zip(ar["origem"], ar["destino"], ar["repasse"].map({True: "repasse", False: "teste"}), ar["valor"]))
     dono = {**dict(zip(ar["origem"], ar["banco_origem"])), **dict(zip(ar["destino"], ar["banco_destino"]))}
+    # As contas suspeitas são da própria instituição mesmo quando não têm nenhum repasse rápido
+    # (por exemplo: só contestação MED). Sem isso elas nunca eram marcadas no modo sozinha.
+    dono.update({i: banco for i in minhas.index})
     relatores = defaultdict(set)
     for o, d in zip(ar["origem"], ar["destino"]):
         relatores[o].add(banco)
