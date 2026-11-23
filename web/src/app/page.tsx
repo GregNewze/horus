@@ -264,8 +264,8 @@ export default function Home() {
           <h2>O que ainda não resolvemos</h2>
           <ul className="limites">
             <li><b>Chave compartilhada.</b> Com uma chave HMAC comum, um membro poderia testar CPFs e descobrir suspeitos de outro. A correção é um OPRF, em que o hub calcula o token sem ver o CPF.</li>
-            <li><b>Dados sintéticos.</b> O gerador é nosso. Na base pública IBM AMLworld, que simula lavagem corporativa lenta, as regras de repasse em 1 hora não acharam nada: é outro crime. Falta validar num simulador de golpe Pix independente.</li>
-            <li><b>Precisão perfeita é frágil.</b> Com mais ruído, aparecem de 0 a 1 alarme falso por simulação. Inocentes contestados chegam a 55 pontos, perto do corte de 60.</li>
+            <li><b>Validação externa.</b> No PixSim, um simulador de golpe Pix independente, calibrado com dados do BCB (Zeimarani et al., 2026), o consórcio achou de 50% a 56% dos laranjas, contra 40% a 48% de cada instituição sozinha, em 3 sementes. Mas a precisão caiu para 83% a 90%: as contas de saída, como lojas e corretoras que recebem de muitos laranjas, viraram alarme falso. E o dinheiro protegido quase não mudou. Na base IBM AMLworld, que simula lavagem corporativa lenta, as regras de repasse em 1 hora não acharam nada: é outro crime.</li>
+            <li><b>Precisão perfeita só no nosso gerador.</b> No nosso gerador há de 0 a 1 alarme falso por simulação; no PixSim, de 9 a 16. A próxima regra é não somar pontos de rede a contas PJ que recebem de muitos pagadores lícitos.</li>
             <li><b>Antes do MED, nem sempre.</b> O consórcio acha os anéis antes da instituição sozinha, mas antes da primeira contestação só em {numeros.antesMed} de {numeros.nAneis}.</li>
           </ul>
         </article>}
