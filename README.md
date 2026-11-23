@@ -12,7 +12,7 @@ Projeto do time Northern no Hack Brasil 2026, trilha Cibersegurança.
 |---|---|
 | **Hórus** | Tela com o grafo da rede inteira, onde os anéis de laranjas aparecem |
 | **Muninn** | Parte de um Pix contestado, segue o dinheiro conta por conta e escreve o laudo |
-| **Ouroboros** | Detecta o dinheiro que dá a volta e retorna para perto da origem |
+| **Ouroboros** (experimental) | Procura o dinheiro que dá a volta e volta para a conta de onde saiu. Ainda não entra na nota nem na tela |
 
 ## Dados
 
@@ -35,6 +35,16 @@ Resultados (o mesmo motor, sem ajuste por base):
 | IBM AMLworld (lavagem lenta) | 0% → 0% | — | — |
 
 Em nenhuma base um laranja é marcado antes do primeiro golpe que recebe. No PixSim os laranjas extras do consórcio ficam evidentes depois de usados, então o dinheiro protegido não sobe.
+
+### Ouroboros no AMLworld
+
+O AMLworld tem 54 ciclos de lavagem rotulados. O Ouroboros (`motor/ouroboros.py`) procura ciclos de 3 a 10 Pix em ordem no tempo, dentro de 5 dias, com o valor encolhendo aos poucos (`validacao/ouroboros_aml.py`, 99 s na base inteira):
+
+- 52 ciclos achados, 30 só com transferências de lavagem: precisão de 58%.
+- Dos 40 ciclos rotulados que conseguimos casar com as transferências, achou 7.
+- Dos 30 ciclos de lavagem achados, 25 passam por bancos de fora do consórcio e ninguém fecharia; 3 só fecham com o consórcio; 2 uma instituição fecha sozinha.
+
+Por isso ele fica de fora da nota e da demo até ser testado numa base com ciclos de golpe Pix.
 
 ## Privacidade
 

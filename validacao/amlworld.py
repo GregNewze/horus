@@ -36,7 +36,7 @@ INSTITUICOES = {"Fora A": (0.26, False), "Fora B": (0.24, False), "Membro 1": (0
                 "Membro 2": (0.12, True), "Membro 3": (0.13, True), "Membro 4": (0.13, True)}
 
 
-def ler(csv):
+def ler(csv, com_nomes=False):
     cols = ["ts", "bo", "co", "bd", "cd", "vr", "mr", "vp", "mp", "fmt", "lav"]
     d = pd.read_csv(csv, header=0, names=cols, usecols=["ts", "bo", "co", "bd", "cd", "vr", "mr", "vp", "mp", "lav"],
                     dtype={"bo": "string", "co": "string", "bd": "string", "cd": "string",
@@ -55,6 +55,8 @@ def ler(csv):
     banco_da_conta = pd.Series(banco).groupby(cod).first().values  # cada conta pertence a um banco só
     out = pd.DataFrame({"ts": d["ts"].values, "o": cod[:n], "dd": cod[n:], "valor": d["valor"].values,
                         "lav": d["lav"].values})
+    if com_nomes:
+        return out, banco_da_conta, cambio, contas_str
     return out, banco_da_conta, cambio
 
 
